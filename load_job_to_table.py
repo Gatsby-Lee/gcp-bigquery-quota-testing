@@ -14,12 +14,13 @@ from google.cloud.bigquery import (
     LoadJobConfig,
     SchemaField,
     Table,
+    TimePartitioning,
 )
 
 LOGGER = logging.getLogger(__name__)
-TABLE_NAME = 'loadjob_daily_1000quota_standard'
 TABLE_SCHEMA = [
     SchemaField('keyword', 'STRING', mode='REQUIRED'),
+    SchemaField('partition_value', 'DATE', mode='REQUIRED'),
 ]
 
 
@@ -38,20 +39,27 @@ class ThreadWrapper(threading.Thread):
         self.fn(*self._arg_list)
 
 
-def create_table(client, dataset_ref):
-    table_ref = dataset_ref.table(TABLE_NAME)
+def create_table(client, dataset_ref, table_name, is_partitioned=False):
+    table_ref = dataset_ref.table(table_name)
     table_obj = Table(table_ref, schema=TABLE_SCHEMA)
+
+    if is_partitioned:
+        time_partitioning = TimePartitioning()
+        time_partitioning.field = 'partition_value'
+        table_obj.time_partitioning = time_partitioning
+
     return client.create_table(table_obj)
 
 
-def drop_table(client, dataset_ref):
-    table_ref = dataset_ref.table(TABLE_NAME)
+def drop_table(client, dataset_ref, table_name):
+    table_ref = dataset_ref.table(table_name)
     client.delete_table(table_ref)
 
 
-def loadjob_one(client, dataset_ref):
-    data = [{'keyword': 'dummy-{}'.format(str(time.time()))}]
-    table_ref = dataset_ref.table(TABLE_NAME)
+def loadjob_one(client, dataset_ref, table_name):
+    data = [{'keyword': 'dummy-{}'.format(str(time.time())),
+             'partition_value': '2019-12-24'}]
+    table_ref = dataset_ref.table(table_name)
     table_obj = Table(table_ref, schema=TABLE_SCHEMA)
     job_config = LoadJobConfig()
     job_config.schema = TABLE_SCHEMA
@@ -68,19 +76,22 @@ def loadjob_one(client, dataset_ref):
         raise FailedInsertingSerpCacheBigQueryException(error_msg)
 
 
-def loadjob_infinite(client, dataset_ref, sleep_time=None):
+def loadjob_infinite(client, dataset_ref, table_name,
+                     sleep_time=None):
     while True:
-        loadjob_one(client, dataset_ref)
+        loadjob_one(client, dataset_ref, table_name)
         if sleep_time is not None:
             time.sleep(sleep_time)
 
 
-def loadjob_with_thread(project_name, dataset_name, num_thread, sleep_time=None):
+def loadjob_with_thread(project_name, dataset_name, table_name,
+                        num_thread, sleep_time=None):
     tlist = []
     for _ in range(num_thread):
         client = Client(project_name)
         dataset_ref = Dataset(client.dataset(dataset_name))
-        tw = ThreadWrapper(loadjob_infinite, [client, dataset_ref, sleep_time])
+        tw = ThreadWrapper(loadjob_infinite,
+                           [client, dataset_ref, table_name, sleep_time])
         tw.start()
         tlist.append(tw)
 
@@ -95,12 +106,14 @@ def _parse_args():
     base_parser = argparse.ArgumentParser(add_help=False)
     base_parser.add_argument('--dataset', required=True)
     base_parser.add_argument('--project', required=True)
-    base_parser.add_argument('--num-thread', default=2, type=int)
+    base_parser.add_argument('--table', required=True)
+    base_parser.add_argument('--num-thread', default=1, type=int)
     base_parser.add_argument('--sleep', type=int)
 
     cmd_parser = parser.add_subparsers(dest='cmd')
     cmd_parser.requird = True
-    cmd_parser.add_parser('create-table', parents=[base_parser])
+    cmd_create_table = cmd_parser.add_parser('create-table', parents=[base_parser])
+    cmd_create_table.add_argument('--partitioned', action='store_true')
     cmd_parser.add_parser('drop-table', parents=[base_parser])
     cmd_parser.add_parser('loadjob-one', parents=[base_parser])
     cmd_parser.add_parser('loadjob-with-thread', parents=[base_parser])
@@ -113,15 +126,16 @@ def _main():
 
     _client = Client(args.project)
     _dataset_ref = Dataset(_client.dataset(args.dataset))
+    _table = args.table
 
     if args.cmd == 'create-table':
-        create_table(_client, _dataset_ref)
+        create_table(_client, _dataset_ref, _table, args.partitioned)
     elif args.cmd == 'drop-table':
-        drop_table(_client, _dataset_ref)
+        drop_table(_client, _dataset_ref, _table)
     elif args.cmd == 'loadjob-one':
-        loadjob_one(_client, _dataset_ref)
+        loadjob_one(_client, _dataset_ref, _table)
     elif args.cmd == 'loadjob-with-thread':
-        loadjob_with_thread(args.project, args.dataset, args.num_thread,
+        loadjob_with_thread(args.project, args.dataset, _table, args.num_thread,
                             args.sleep)
 
 
