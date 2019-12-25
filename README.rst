@@ -127,5 +127,4 @@ quotaExceeded
 
 .. code-block:: python
 
-      [{'reason': 'quotaExceeded', 'location': 'load_job_per_table.long',
-      'message': 'Quota exceeded: Your table exceeded quota for imports or query appends per table. For more information, see https://cloud.google.com/bigquery/troubleshooting-errors'}]
+      [{'reason': 'quotaExceeded', 'location': 'partition_modifications_per_column_partitioned_table.long', 'message': 'Quota exceeded: Your table exceeded quota for Number of partition modifications to a column partitioned table. For more information, see https://cloud.google.com/bigquery/troubleshooting-errors'}]
