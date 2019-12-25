@@ -133,3 +133,58 @@ quotaExceeded
 
       [{'reason': 'quotaExceeded', 'location': 'partition_modifications_per_column_partitioned_table.long',
       'message': 'Quota exceeded: Your table exceeded quota for Number of partition modifications to a column partitioned table. For more information, see https://cloud.google.com/bigquery/troubleshooting-errors'}]
+      
+      
+
+LoadJob to test Project Level LoadJob limit
+===========================================
+
+ref: https://cloud.google.com/bigquery/quotas#load_jobs
+
+Create Table
+------------
+
+.. code-block:: bash
+
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_1 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_2 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_3 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_4 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_5 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_6 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_7 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_8 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_9 --partitioned
+    python load_job_to_table.py create-table --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_10 --partitioned
+
+
+Run load jobs with threads
+--------------------------
+
+.. code-block:: bash
+
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_1 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_2 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_3 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_4 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_5 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_6 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_7 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_8 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_9 --num-thread 8
+    python load_job_to_table.py loadjob-with-thread --project [project_name] --dataset [dataset_name] --table loadjob_30000quota_par_table_10 --num-thread 8
+    
+
+quotaExceeded
+>>>>>>>>>>>>>
+
+* Load jobs per project per day — 100,000 (including failures)
+
+
+.. code-block:: python
+
+      [{'reason': 'quotaExceeded', 'location': 'load_job',
+      'message': 'Quota exceeded: Your project exceeded quota for imports per project. For more information, see https://cloud.google.com/bigquery/troubleshooting-errors'}]
+
+    
+    
