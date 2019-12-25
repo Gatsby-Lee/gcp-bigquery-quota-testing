@@ -6,7 +6,11 @@ Setup
 
 .. code-block:: bash
 
-    pip install -r requirements.txt
+    git clone https://github.com/Gatsby-Lee/gcp-bigquery-quota-testing.git
+    cd gcp-bigquery-quota-testing.git
+    python -m venv .venv
+    source .venv/bin/activate
+    .venv) pip install -r requirements.txt
     # export GCP service account credential path if necessary
     # GOOGLE_APPLICATION_CREDENTIALS
 
